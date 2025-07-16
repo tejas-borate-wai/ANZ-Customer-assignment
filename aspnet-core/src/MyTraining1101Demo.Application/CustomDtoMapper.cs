@@ -25,6 +25,8 @@ using MyTraining1101Demo.Authorization.Users.Importing.Dto;
 using MyTraining1101Demo.Authorization.Users.Profile.Dto;
 using MyTraining1101Demo.Chat;
 using MyTraining1101Demo.Chat.Dto;
+using MyTraining1101Demo.Customers;
+using MyTraining1101Demo.Customers.Dtos;
 using MyTraining1101Demo.DynamicEntityProperties.Dto;
 using MyTraining1101Demo.Editions;
 using MyTraining1101Demo.Editions.Dto;
@@ -49,6 +51,13 @@ namespace MyTraining1101Demo
         public static void CreateMappings(IMapperConfigurationExpression configuration)
         {
             //Inputs
+
+            configuration.CreateMap<CreateOrEditCustomerDto, Customer>();
+            configuration.CreateMap<Customer, CreateOrEditCustomerDto>();
+            configuration.CreateMap<Customer, CustomerDto>();
+            configuration.CreateMap<Customer, GetCustomerForEditOutput>();
+
+
             configuration.CreateMap<CheckboxInputType, FeatureInputTypeDto>();
             configuration.CreateMap<SingleLineStringInputType, FeatureInputTypeDto>();
             configuration.CreateMap<ComboboxInputType, FeatureInputTypeDto>();

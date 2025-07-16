@@ -5,6 +5,7 @@ using MyTraining1101Demo.Authorization.Delegation;
 using MyTraining1101Demo.Authorization.Roles;
 using MyTraining1101Demo.Authorization.Users;
 using MyTraining1101Demo.Chat;
+using MyTraining1101Demo.Customers;
 using MyTraining1101Demo.Editions;
 using MyTraining1101Demo.Friendships;
 using MyTraining1101Demo.MultiTenancy;
@@ -17,6 +18,9 @@ namespace MyTraining1101Demo.EntityFrameworkCore
     public class MyTraining1101DemoDbContext : AbpZeroDbContext<Tenant, Role, User, MyTraining1101DemoDbContext>, IAbpPersistedGrantDbContext
     {
         /* Define an IDbSet for each entity of the application */
+        public virtual DbSet<Customer> Customer { get; set; }
+        public virtual DbSet<CustomerUser> CustomerUser { get; set; }
+
 
         public virtual DbSet<BinaryObject> BinaryObjects { get; set; }
 
@@ -50,6 +54,17 @@ namespace MyTraining1101Demo.EntityFrameworkCore
             {
                 b.HasIndex(e => new { e.TenantId });
             });
+
+            modelBuilder.Entity<CustomerUser>(entity =>
+            {
+                entity.HasKey(e => new { e.CustomerId, e.UserId });
+
+                entity.HasIndex(e => e.UserId)
+                      .IsUnique();
+            });
+
+
+
 
             modelBuilder.Entity<ChatMessage>(b =>
             {
