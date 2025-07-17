@@ -1,6 +1,7 @@
 import { Component, OnInit, Injector } from '@angular/core';
 import { AppComponentBase } from '@shared/common/app-component-base';
-import { CustomerServiceProxy, CustomerDto, PagedResultDtoOfCustomerDto, CreateOrEditCustomerDto } from '@shared/service-proxies/service-proxies';
+import { CustomerServiceProxy, CustomerDto, PagedResultDtoOfCustomerDto, CreateOrEditCustomerDto, UserServiceProxy } from '@shared/service-proxies/service-proxies';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-customers',
@@ -19,9 +20,10 @@ export class CustomersComponent extends AppComponentBase implements OnInit {
   
   // Pagination variables
   currentPage: number = 1;
-  pageSize: number = 10;
+  pageSize: number = 3;
   
   userList = []; // Will be loaded from API
+  assignedUserDetails: any[] = []; // Store assigned user details for edit mode
 
 selectedUsers: number[] = [];
 
@@ -40,7 +42,8 @@ isEditMode: boolean = false; // Track if we're editing
 
   constructor(
     injector: Injector,
-    private _customerService: CustomerServiceProxy
+    private _customerService: CustomerServiceProxy,
+    private _userService: UserServiceProxy
   ) {
     super(injector);
   }
@@ -130,7 +133,6 @@ isEditMode: boolean = false; // Track if we're editing
 
   // Method to view users for customer
   viewUsers(customer: CustomerDto): void {
-    console.log('View users for customer:', customer);
     // TODO: Implement view users functionality
     this.notify.info('View users functionality will be implemented later');
     this.selectedCustomer = null; // Close dropdown
@@ -140,13 +142,10 @@ isEditMode: boolean = false; // Track if we're editing
   editCustomer(customer: CustomerDto): void {
     this.selectedCustomer = null; // Close dropdown
     
-    console.log('Edit customer clicked:', customer); // Debug log
-    
     // Try to load customer data for editing
     try {
       this._customerService.getCustomerForEdit(customer.id).subscribe({
         next: (result) => {
-          console.log('Customer data loaded:', result); // Debug log
           this.isEditMode = true;
           this.customerForm = {
             id: result.id,
@@ -156,11 +155,11 @@ isEditMode: boolean = false; // Track if we're editing
             registrationDate: result.registrationDate ? result.registrationDate.toString().split('T')[0] : '',
             userIds: result.assignedUserIds || []
           };
-          this.loadUnassignedUsers(); // Load available users
+          
+          this.loadAllUsers(); // Load all users for edit mode
           this.showCustomerModal = true; // Open modal
         },
         error: (error) => {
-          console.error('Error loading customer:', error);
           this.notify.error('Failed to load customer data');
           
           // Fallback: Open modal with basic data
@@ -173,12 +172,11 @@ isEditMode: boolean = false; // Track if we're editing
             registrationDate: customer.registrationDate ? customer.registrationDate.toString().split('T')[0] : '',
             userIds: []
           };
-          this.loadUnassignedUsers();
+          this.loadAllUsers();
           this.showCustomerModal = true;
         }
       });
     } catch (error) {
-      console.error('Method not found, using fallback:', error);
       // Simple fallback if method doesn't exist
       this.isEditMode = true;
       this.customerForm = {
@@ -189,17 +187,29 @@ isEditMode: boolean = false; // Track if we're editing
         registrationDate: customer.registrationDate ? customer.registrationDate.toString().split('T')[0] : '',
         userIds: []
       };
-      this.loadUnassignedUsers();
+      this.loadAllUsers();
       this.showCustomerModal = true;
     }
   }
 
   // Method to delete customer
   deleteCustomer(customer: CustomerDto): void {
-    console.log('Delete customer:', customer);
-    // TODO: Implement delete functionality
-    this.notify.info('Delete functionality will be implemented later');
     this.selectedCustomer = null; // Close dropdown
+    
+    if (confirm(`Are you sure you want to delete customer "${customer.name}"?`)) {
+      this.loading = true;
+      this._customerService.delete(customer.id).subscribe({
+        next: () => {
+          this.loading = false;
+          this.notify.success('Customer deleted successfully!');
+          this.loadCustomers(); // Reload the table
+        },
+        error: (error) => {
+          this.loading = false;
+          this.notify.error('Failed to delete customer');
+        }
+      });
+    }
   }
 
   // Method to open customer modal
@@ -218,7 +228,64 @@ isEditMode: boolean = false; // Track if we're editing
         }));
       },
       error: (error) => {
-        console.error('Error loading users:', error);
+        this.notify.error('Failed to load users');
+      }
+    });
+  }
+
+  // Method to load all users (for edit mode)
+  loadAllUsers(): void {
+    // For edit mode, we need to load all users so assigned users show in dropdown
+    this._customerService.getUnassignedUsers().subscribe({
+      next: (result) => {
+        // Start with unassigned users
+        this.userList = result.items.map(item => ({
+          id: item.value,
+          name: item.name
+        }));
+        
+        // If we have assigned userIds, fetch their actual names
+        if (this.customerForm.userIds && this.customerForm.userIds.length > 0) {
+          // Create array of API calls to get user details
+          const userDetailCalls = this.customerForm.userIds.map(userId => {
+            const existsInList = this.userList.find(user => user.id === userId);
+            if (!existsInList) {
+              return this._userService.getUserForEdit(userId);
+            }
+            return null;
+          }).filter(call => call !== null);
+
+          // If we have calls to make, execute them
+          if (userDetailCalls.length > 0) {
+            forkJoin(userDetailCalls).subscribe({
+              next: (userDetails) => {
+                // Add the actual user details to the list
+                userDetails.forEach(userDetail => {
+                  if (userDetail && userDetail.user) {
+                    this.userList.push({
+                      id: userDetail.user.id,
+                      name: userDetail.user.name || userDetail.user.userName || `User ${userDetail.user.id}`
+                    });
+                  }
+                });
+              },
+              error: (error) => {
+                // Fallback: add users with ID-based names
+                this.customerForm.userIds.forEach(userId => {
+                  const existsInList = this.userList.find(user => user.id === userId);
+                  if (!existsInList) {
+                    this.userList.push({
+                      id: userId,
+                      name: `User ${userId}`
+                    });
+                  }
+                });
+              }
+            });
+          }
+        }
+      },
+      error: (error) => {
         this.notify.error('Failed to load users');
       }
     });
@@ -248,8 +315,6 @@ isEditMode: boolean = false; // Track if we're editing
     }
 
     this.loading = true;
-    console.log('Saving customer, Edit Mode:', this.isEditMode); // Debug log
-    console.log('Customer Form Data:', this.customerForm); // Debug log
 
     // Create DTO for both create and update
     const input = new CreateOrEditCustomerDto();
@@ -259,8 +324,6 @@ isEditMode: boolean = false; // Track if we're editing
     input.address = this.customerForm.address;
     input.registrationDate = this.customerForm.registrationDate ? new Date(this.customerForm.registrationDate) as any : undefined;
     input.assignedUserIds = this.customerForm.userIds;
-
-    console.log('API Input:', input); // Debug log
 
     // Call create or update based on mode
     if (this.isEditMode) {
@@ -275,7 +338,6 @@ isEditMode: boolean = false; // Track if we're editing
         error: (error) => {
           this.loading = false;
           this.notify.error('Failed to update customer');
-          console.error('Error updating customer:', error);
         }
       });
     } else {
@@ -290,12 +352,8 @@ isEditMode: boolean = false; // Track if we're editing
         error: (error) => {
           this.loading = false;
           this.notify.error('Failed to create customer');
-          console.error('Error creating customer:', error);
         }
       });
     }
   }
-
-  // Helper method to expose Math.min to template
-  Math = Math;
 }

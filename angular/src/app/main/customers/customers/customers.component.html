@@ -127,7 +127,7 @@
           </select>
         </div>
         <div class="text-muted small">
-          Showing {{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }}
+          Showing {{ (currentPage - 1) * pageSize + 1 }} - {{ currentPage * pageSize > totalCount ? totalCount : currentPage * pageSize }} of {{ totalCount }}
         </div>
         <nav *ngIf="totalPages > 1">
           <ul class="pagination pagination-sm mb-0">
