@@ -1,0 +1,144 @@
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Customers</h5>
+    <div class="d-flex align-items-center">
+      <input
+        type="text"
+        [(ngModel)]="keyword"
+        placeholder="Search..."
+        (keyup.enter)="search()"
+        class="form-control mr-2"
+        style="width: 250px;"
+      />
+      <button class="btn btn-outline-primary mr-2" (click)="search()">
+        <i class="fa fa-search"></i>
+      </button>
+      <button class="btn btn-primary" (click)="createOrEditCustomer()">
+        <i class="fa fa-plus"></i> Create New Customer
+      </button>
+    </div>
+  </div>
+
+  <div class="card-body p-0">
+    <!-- Loading state -->
+    <div *ngIf="isLoading" class="text-center py-5">
+      <i class="fa fa-spinner fa-spin fa-2x"></i>
+      <p class="mt-2">Loading customers...</p>
+    </div>
+
+    <!-- Table -->
+    <div *ngIf="!isLoading" class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="thead-light">
+          <tr>
+            <th style="width: 50px;">
+              <input type="checkbox" />
+            </th>
+            <th style="width: 20%;">Customer Name</th>
+            <th style="width: 25%;">Email</th>
+            <th style="width: 30%;">Address</th>
+            <th style="width: 15%;">Registration Date</th>
+            <th style="width: 10%;" class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let customer of customers" class="align-middle">
+            <td>
+              <input type="checkbox" />
+            </td>
+            <td>
+              <div class="d-flex align-items-center">
+                <div class="avatar-placeholder mr-3">
+                  <i class="fa fa-user"></i>
+                </div>
+                <div>
+                  <strong>{{ customer.name }}</strong>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="text-truncate d-block" style="max-width: 200px;">
+                {{ customer.emailId }}
+              </span>
+            </td>
+            <td>
+              <span class="text-truncate d-block" style="max-width: 250px;">
+                {{ customer.address }}
+              </span>
+            </td>
+            <td>
+              <span class="text-muted">
+                {{ customer.registrationDate | date: 'dd-MM-yyyy' }}
+              </span>
+            </td>
+            <td class="text-center">
+              <div class="btn-group" dropdown>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-secondary"
+                  dropdownToggle
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                >
+                  <i class="fa fa-ellipsis-v"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-right" *dropdownMenu>
+                  <li>
+                    <a class="dropdown-item" href="javascript:void(0)" (click)="viewUsers(customer.id)">
+                      <i class="fa fa-users mr-2"></i>View Users
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="javascript:void(0)" (click)="editCustomer(customer.id)">
+                      <i class="fa fa-edit mr-2"></i>Edit
+                    </a>
+                  </li>
+                  <li class="dropdown-divider"></li>
+                  <li>
+                    <a class="dropdown-item text-danger" href="javascript:void(0)" (click)="deleteCustomer(customer.id)">
+                      <i class="fa fa-trash mr-2"></i>Delete
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </td>
+          </tr>
+          
+          <!-- Empty state row when no customers -->
+          <tr *ngIf="customers.length === 0" class="text-center">
+            <td colspan="6" class="py-5">
+              <div class="empty-state">
+                <i class="fa fa-users fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No customers found</h5>
+                <p class="text-muted">Create your first customer to get started.</p>
+                <button class="btn btn-primary mt-2" (click)="createOrEditCustomer()">
+                  <i class="fa fa-plus mr-2"></i>Create New Customer
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="px-4 py-3 border-top" *ngIf="customers.length > 0">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="text-muted">
+          Showing {{ (pageIndex - 1) * pageSize + 1 }} - 
+          {{ Math.min(pageIndex * pageSize, totalCount) }} of {{ totalCount }} customers
+        </div>
+        <ngb-pagination
+          [collectionSize]="totalCount"
+          [(page)]="pageIndex"
+          [pageSize]="pageSize"
+          (pageChange)="getCustomers()"
+          [maxSize]="5"
+          [rotate]="true"
+          [boundaryLinks]="true"
+          size="sm"
+        ></ngb-pagination>
+      </div>
+    </div>
+  </div>
+</div>

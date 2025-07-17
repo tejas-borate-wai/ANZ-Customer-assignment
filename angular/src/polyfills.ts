@@ -1,5 +1,6 @@
 // This file includes polyfills needed by Angular 2 and is loaded before
 // the app. You can add your own extra polyfills to this file.
+import '@angular/localize/init';
 import 'core-js/es/array';
 import 'core-js/es/date';
 import 'core-js/es/function';

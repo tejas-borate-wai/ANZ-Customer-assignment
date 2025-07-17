@@ -55,13 +55,13 @@ namespace MyTraining1101Demo.EntityFrameworkCore
                 b.HasIndex(e => new { e.TenantId });
             });
 
-            modelBuilder.Entity<CustomerUser>(entity =>
-            {
-                entity.HasKey(e => new { e.CustomerId, e.UserId });
+            //modelBuilder.Entity<CustomerUser>(entity =>
+            //{
+            //    entity.HasKey(e => new { e.CustomerId, e.UserId });
 
-                entity.HasIndex(e => e.UserId)
-                      .IsUnique();
-            });
+            //    entity.HasIndex(e => e.UserId)
+            //          .IsUnique();
+            //});
 
 
 
