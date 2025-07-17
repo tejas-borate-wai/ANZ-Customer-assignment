@@ -1,6 +1,6 @@
 import { Component, OnInit, Injector } from '@angular/core';
 import { AppComponentBase } from '@shared/common/app-component-base';
-import { CustomerServiceProxy, CustomerDto, PagedResultDtoOfCustomerDto } from '@shared/service-proxies/service-proxies';
+import { CustomerServiceProxy, CustomerDto, PagedResultDtoOfCustomerDto, CreateOrEditCustomerDto } from '@shared/service-proxies/service-proxies';
 
 @Component({
   selector: 'app-customers',
@@ -21,13 +21,21 @@ export class CustomersComponent extends AppComponentBase implements OnInit {
   currentPage: number = 1;
   pageSize: number = 10;
   
-  userList = [
-  { id: 1, name: 'Abhijeet' },
-  { id: 2, name: 'Tejas' },
-  { id: 3, name: 'Amit' }
-];
+  userList = []; // Will be loaded from API
 
 selectedUsers: number[] = [];
+
+// Customer form data
+customerForm = {
+  id: null, // Add ID for edit mode
+  name: '',
+  emailId: '',
+  address: '',
+  registrationDate: '',
+  userIds: [] as number[]
+};
+
+isEditMode: boolean = false; // Track if we're editing
 
 
   constructor(
@@ -130,10 +138,60 @@ selectedUsers: number[] = [];
 
   // Method to edit customer
   editCustomer(customer: CustomerDto): void {
-    console.log('Edit customer:', customer);
-    // TODO: Implement edit functionality
-    this.notify.info('Edit functionality will be implemented later');
     this.selectedCustomer = null; // Close dropdown
+    
+    console.log('Edit customer clicked:', customer); // Debug log
+    
+    // Try to load customer data for editing
+    try {
+      this._customerService.getCustomerForEdit(customer.id).subscribe({
+        next: (result) => {
+          console.log('Customer data loaded:', result); // Debug log
+          this.isEditMode = true;
+          this.customerForm = {
+            id: result.id,
+            name: result.name || '',
+            emailId: result.emailId || '',
+            address: result.address || '',
+            registrationDate: result.registrationDate ? result.registrationDate.toString().split('T')[0] : '',
+            userIds: result.assignedUserIds || []
+          };
+          this.loadUnassignedUsers(); // Load available users
+          this.showCustomerModal = true; // Open modal
+        },
+        error: (error) => {
+          console.error('Error loading customer:', error);
+          this.notify.error('Failed to load customer data');
+          
+          // Fallback: Open modal with basic data
+          this.isEditMode = true;
+          this.customerForm = {
+            id: customer.id,
+            name: customer.name || '',
+            emailId: customer.emailId || '',
+            address: customer.address || '',
+            registrationDate: customer.registrationDate ? customer.registrationDate.toString().split('T')[0] : '',
+            userIds: []
+          };
+          this.loadUnassignedUsers();
+          this.showCustomerModal = true;
+        }
+      });
+    } catch (error) {
+      console.error('Method not found, using fallback:', error);
+      // Simple fallback if method doesn't exist
+      this.isEditMode = true;
+      this.customerForm = {
+        id: customer.id,
+        name: customer.name || '',
+        emailId: customer.emailId || '',
+        address: customer.address || '',
+        registrationDate: customer.registrationDate ? customer.registrationDate.toString().split('T')[0] : '',
+        userIds: []
+      };
+      this.loadUnassignedUsers();
+      this.showCustomerModal = true;
+    }
   }
 
   // Method to delete customer
@@ -147,11 +205,95 @@ selectedUsers: number[] = [];
   // Method to open customer modal
   openCustomerModal(): void {
     this.showCustomerModal = true;
+    this.loadUnassignedUsers(); // Load users when modal opens
+  }
+
+  // Method to load unassigned users
+  loadUnassignedUsers(): void {
+    this._customerService.getUnassignedUsers().subscribe({
+      next: (result) => {
+        this.userList = result.items.map(item => ({
+          id: item.value,
+          name: item.name
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading users:', error);
+        this.notify.error('Failed to load users');
+      }
+    });
   }
 
   // Method to close customer modal
   closeCustomerModal(): void {
     this.showCustomerModal = false;
+    this.isEditMode = false;
+    // Reset form when closing
+    this.customerForm = {
+      id: null,
+      name: '',
+      emailId: '',
+      address: '',
+      registrationDate: '',
+      userIds: []
+    };
+  }
+
+  // Method to save customer
+  saveCustomer(): void {
+    // Simple validation
+    if (!this.customerForm.name || !this.customerForm.emailId) {
+      this.notify.warn('Please fill required fields');
+      return;
+    }
+
+    this.loading = true;
+    console.log('Saving customer, Edit Mode:', this.isEditMode); // Debug log
+    console.log('Customer Form Data:', this.customerForm); // Debug log
+
+    // Create DTO for both create and update
+    const input = new CreateOrEditCustomerDto();
+    input.id = this.customerForm.id; // Will be null for create, ID for update
+    input.name = this.customerForm.name;
+    input.emailId = this.customerForm.emailId;
+    input.address = this.customerForm.address;
+    input.registrationDate = this.customerForm.registrationDate ? new Date(this.customerForm.registrationDate) as any : undefined;
+    input.assignedUserIds = this.customerForm.userIds;
+
+    console.log('API Input:', input); // Debug log
+
+    // Call create or update based on mode
+    if (this.isEditMode) {
+      // Update existing customer
+      this._customerService.update(input).subscribe({
+        next: (result) => {
+          this.loading = false;
+          this.notify.success('Customer updated successfully!');
+          this.closeCustomerModal();
+          this.loadCustomers(); // Reload the table
+        },
+        error: (error) => {
+          this.loading = false;
+          this.notify.error('Failed to update customer');
+          console.error('Error updating customer:', error);
+        }
+      });
+    } else {
+      // Create new customer
+      this._customerService.create(input).subscribe({
+        next: (result) => {
+          this.loading = false;
+          this.notify.success('Customer created successfully!');
+          this.closeCustomerModal();
+          this.loadCustomers(); // Reload the table
+        },
+        error: (error) => {
+          this.loading = false;
+          this.notify.error('Failed to create customer');
+          console.error('Error creating customer:', error);
+        }
+      });
+    }
   }
 
   // Helper method to expose Math.min to template

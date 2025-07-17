@@ -93,13 +93,13 @@
                   </button>
                   <ul class="dropdown-menu" 
                       [class.show]="selectedCustomer?.id === customer.id">
-                    <li><a class="dropdown-item d-flex align-items-center" href="" (click)="viewUsers(customer)">
+                    <li><a class="dropdown-item d-flex align-items-center" href="javascript:void(0)" (click)="viewUsers(customer); $event.stopPropagation()">
                       <i class="fas fa-users me-2 text-primary"></i>View Users
                     </a></li>
-                    <li><a class="dropdown-item d-flex align-items-center" href="" (click)="editCustomer(customer)">
+                    <li><a class="dropdown-item d-flex align-items-center" href="javascript:void(0)" (click)="editCustomer(customer); $event.stopPropagation()">
                       <i class="fas fa-edit me-2 text-warning"></i>Edit
                     </a></li>
-                    <li><a class="dropdown-item d-flex align-items-center" href="" (click)="deleteCustomer(customer)">
+                    <li><a class="dropdown-item d-flex align-items-center" href="javascript:void(0)" (click)="deleteCustomer(customer); $event.stopPropagation()">
                       <i class="fas fa-trash me-2 text-danger"></i>Delete
                     </a></li>
                   </ul>
@@ -161,7 +161,7 @@
   <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Create New Customers and Users</h5>
+        <h5 class="modal-title">{{ isEditMode ? 'Edit Customer' : 'Create New Customer' }}</h5>
         <button type="button" class="btn-close" (click)="closeCustomerModal()"></button>
       </div>
       <div class="modal-body">
@@ -169,14 +169,16 @@
           <div class="col-md-6">
             <div class="mb-3">
               <label class="form-label">Customer Name*</label>
-              <input type="text" class="form-control" placeholder="Enter customer Name">
+              <input type="text" class="form-control" placeholder="Enter customer Name" 
+                     [(ngModel)]="customerForm.name">
               <small class="text-muted">Please enter customer Name</small>
             </div>
           </div>
           <div class="col-md-6">
             <div class="mb-3">
               <label class="form-label">Customer Email*</label>
-              <input type="email" class="form-control" placeholder="Enter customer email">
+              <input type="email" class="form-control" placeholder="Enter customer email"
+                     [(ngModel)]="customerForm.emailId">
               <small class="text-muted">Please enter customer email</small>
             </div>
           </div>
@@ -185,14 +187,16 @@
           <div class="col-md-6">
             <div class="mb-3">
               <label class="form-label">Customer Address</label>
-              <input type="text" class="form-control" placeholder="Enter customer Address">
+              <input type="text" class="form-control" placeholder="Enter customer Address"
+                     [(ngModel)]="customerForm.address">
               <small class="text-muted">Please enter customer address</small>
             </div>
           </div>
           <div class="col-md-6">
             <div class="mb-3">
               <label class="form-label">Registration Date</label>
-              <input type="date" class="form-control" placeholder="Enter your registration Date">
+              <input type="date" class="form-control" placeholder="Enter your registration Date"
+                     [(ngModel)]="customerForm.registrationDate">
               <small class="text-muted">Please enter your registration Date</small>
             </div>
           </div>
@@ -203,7 +207,7 @@
             [options]="userList"
             optionLabel="name"
             optionValue="id"
-            [(ngModel)]="selectedUsers"
+            [(ngModel)]="customerForm.userIds"
             placeholder="Select users"
             display="chip"
             [maxSelectedLabels]="2"
@@ -211,13 +215,16 @@
             class="w-50">
           </p-multiSelect>
 
-          <p class="mt-2">Selected User IDs: {{ selectedUsers }}</p>
+          <p class="mt-2">Selected User IDs: {{ customerForm.userIds }}</p>
 
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" (click)="closeCustomerModal()">Cancel</button>
-        <button type="button" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-primary" (click)="saveCustomer()" [disabled]="loading">
+          <i class="fas fa-spinner fa-spin me-2" *ngIf="loading"></i>
+          Save
+        </button>
       </div>
     </div>
   </div>

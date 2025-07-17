@@ -164,6 +164,26 @@ namespace MyTraining1101Demo.Customers
             );
         }
 
+        public async Task<ListResultDto<NameValueDto>> GetUnassignedUsersAsync()
+        {
+            var assignedUserIds = await _customerUserRepository.GetAll()
+                .Select(x => x.UserId)
+                .Distinct()
+                .ToListAsync();
+
+            var unassignedUsers = await _userRepository.GetAll()
+                .Where(u => !assignedUserIds.Contains(u.Id))
+                .Select(u => new NameValueDto
+                {
+                    Name = $"{u.FullName}",
+                    Value = u.Id.ToString()
+                })
+                .ToListAsync();
+
+            return new ListResultDto<NameValueDto>(unassignedUsers);
+        }
+
+
 
     }
 }
