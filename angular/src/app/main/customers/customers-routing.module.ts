@@ -5,8 +5,7 @@ import { CustomersComponent } from './customers/customers.component';
 const routes: Routes = [
   {
     path: '',
-    component: CustomersComponent,
-    // data: { permission: 'Pages.Customers' } // optional ABP permission
+    component: CustomersComponent
   }
 ];
 
