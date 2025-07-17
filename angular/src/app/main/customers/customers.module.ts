@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CustomersRoutingModule } from './customers-routing.module';
 import { CustomersComponent } from './customers/customers.component';
 import { CreateOrEditCustomerComponent } from './create-or-edit-customer-modal/create-or-edit-customer-modal.component';
+import { ViewUsersModalComponent } from './view-users-modal/view-users-modal.component';
 import { CustomerServiceProxy, UserServiceProxy } from '@shared/service-proxies/service-proxies';
 import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
 import { AppSharedModule } from '@app/shared/app-shared.module';
@@ -16,7 +17,8 @@ import { CalendarModule } from 'primeng/calendar';
 @NgModule({
   declarations: [
     CustomersComponent,
-    CreateOrEditCustomerComponent
+    CreateOrEditCustomerComponent,
+    ViewUsersModalComponent
   ],
   providers: [CustomerServiceProxy, UserServiceProxy],
   imports: [

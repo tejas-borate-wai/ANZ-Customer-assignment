@@ -1,5 +1,6 @@
 ﻿using Abp.Application.Services;
 using Abp.Application.Services.Dto;
+using MyTraining1101Demo.Authorization.Users.Dto;
 using MyTraining1101Demo.Customers.Dtos;
 using System;
 using System.Collections.Generic;
@@ -15,6 +16,6 @@ namespace MyTraining1101Demo.Customers
         Task<PagedResultDto<CustomerDto>> GetAllAsync(GetAllCustomersInput input);
         Task<CreateOrEditCustomerDto> GetCustomerForEditAsync(EntityDto input);
         Task DeleteAsync(EntityDto<int> input);
-
+        Task<ListResultDto<UserListDto>> GetUsersByCustomerId(int customerId);
     }
 }

@@ -2,6 +2,7 @@ import { Component, OnInit, Injector } from '@angular/core';
 import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
 import { CustomerServiceProxy, CustomerDto } from '@shared/service-proxies/service-proxies';
 import { CreateOrEditCustomerComponent } from '../create-or-edit-customer-modal/create-or-edit-customer-modal.component';
+import { ViewUsersModalComponent } from '../view-users-modal/view-users-modal.component';
 import { AppComponentBase } from '@shared/common/app-component-base';
 
 @Component({
@@ -93,7 +94,18 @@ export class CustomersComponent extends AppComponentBase implements OnInit {
   }
 
   viewUsers(customerId: number): void {
-    // This method can be implemented to show assigned users
-    console.log('View users for customer ID:', customerId);
+    // Find the customer to get the customer name
+    const customer = this.customers.find(c => c.id === customerId);
+    
+    console.log('Opening view users modal for customer:', customerId, customer);
+    
+    const modalRef: BsModalRef = this.modalService.show(ViewUsersModalComponent, {
+      class: 'modal-lg'
+    });
+
+    modalRef.content.customerId = customerId;
+    modalRef.content.customerName = customer ? customer.name : 'Unknown Customer';
+    
+    console.log('Modal content set:', modalRef.content);
   }
 }

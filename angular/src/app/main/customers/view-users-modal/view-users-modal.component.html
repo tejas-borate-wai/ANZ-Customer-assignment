@@ -1,0 +1,110 @@
+<div class="modal-header">
+  <h4 class="modal-title">
+    <i class="fa fa-users mr-2"></i>
+    Users Assigned to "{{ customerName }}"
+  </h4>
+  <button type="button" class="close" (click)="close()" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+
+<div class="modal-body">
+  <!-- Debug info -->
+  <div class="alert alert-warning" style="font-size: 12px; margin-bottom: 10px;">
+    <strong>Debug Info:</strong><br>
+    Customer ID: {{ customerId }}<br>
+    Customer Name: {{ customerName }}<br>
+    Users Count: {{ assignedUsers.length }}<br>
+    Users: {{ assignedUsers | json }}
+    <br><br>
+    <button class="btn btn-sm btn-primary" (click)="loadAssignedUsers()">
+      <i class="fa fa-refresh"></i> Reload Users
+    </button>
+    <button class="btn btn-sm btn-info ml-2" (click)="testApiEndpoint()">
+      <i class="fa fa-bug"></i> Test API
+    </button>
+    <button class="btn btn-sm btn-success ml-2" (click)="testServiceProxy()">
+      <i class="fa fa-code"></i> Test Service Proxy
+    </button>
+  </div>
+
+  <!-- Loading indicator -->
+  <div *ngIf="isLoading" class="text-center py-4">
+    <i class="fa fa-spinner fa-spin fa-2x text-primary"></i>
+    <p class="mt-2 text-muted">Loading assigned users...</p>
+  </div>
+
+  <!-- Users list -->
+  <div *ngIf="!isLoading">
+    <!-- Debug info -->
+    <div class="alert alert-warning" style="font-size: 12px; margin-bottom: 10px;">
+      <strong>Debug Info:</strong><br>
+      Customer ID: {{ customerId }}<br>
+      Customer Name: {{ customerName }}<br>
+      Users Count: {{ assignedUsers.length }}<br>
+      Users: {{ assignedUsers | json }}
+    </div>
+    
+    <div *ngIf="assignedUsers.length === 0" class="text-center py-4">
+      <i class="fa fa-user-slash fa-3x text-muted mb-3"></i>
+      <h5 class="text-muted">No Users Assigned</h5>
+      <p class="text-muted">This customer has no users assigned yet.</p>
+    </div>
+
+    <div *ngIf="assignedUsers.length > 0">
+      <div class="alert alert-info d-flex align-items-center mb-3">
+        <i class="fa fa-info-circle mr-2"></i>
+        <span><strong>{{ assignedUsers.length }}</strong> user(s) assigned to this customer</span>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-6 mb-3" *ngFor="let user of assignedUsers; let i = index">
+          <div class="card user-card">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="user-avatar me-3">
+                  <div class="avatar-circle">
+                    <i class="fa fa-user"></i>
+                  </div>
+                </div>
+                <div class="user-info flex-grow-1">
+                  <h6 class="card-title mb-1">
+                    <i class="fa fa-user-circle mr-1 text-primary"></i>
+                    {{ user.userName }}
+                  </h6>
+                  <p class="card-text mb-1">
+                    <i class="fa fa-envelope fa-sm mr-1 text-muted"></i>
+                    <span class="email-text">{{ user.emailAddress }}</span>
+                  </p>
+                  <p class="card-text mb-1" *ngIf="user.name || user.surname">
+                    <i class="fa fa-id-card fa-sm mr-1 text-muted"></i>
+                    <span class="name-text">{{ user.name }} {{ user.surname }}</span>
+                  </p>
+                  <p class="card-text mb-0" *ngIf="user.phoneNumber">
+                    <i class="fa fa-phone fa-sm mr-1 text-muted"></i>
+                    <span class="phone-text">{{ user.phoneNumber }}</span>
+                  </p>
+                  <div class="mt-2">
+                    <span class="badge badge-success" *ngIf="user.isActive">Active</span>
+                    <span class="badge badge-secondary" *ngIf="!user.isActive">Inactive</span>
+                    <span class="badge badge-info ms-1" *ngIf="user.isEmailConfirmed">Email Verified</span>
+                  </div>
+                </div>
+                <div class="user-number">
+                  <div class="position-badge">{{ i + 1 }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-secondary" (click)="close()">
+    <i class="fa fa-times mr-1"></i>
+    Close
+  </button>
+</div>

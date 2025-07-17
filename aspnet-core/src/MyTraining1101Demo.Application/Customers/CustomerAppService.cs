@@ -1,16 +1,19 @@
 ﻿using Abp.Application.Services;
 using Abp.Application.Services.Dto;
+using Abp.Authorization.Users;
 using Abp.Domain.Repositories;
+using Abp.Linq.Extensions;
+using Abp.UI;
 using Microsoft.EntityFrameworkCore;
+using MyTraining1101Demo.Authorization.Users;
+using MyTraining1101Demo.Authorization.Users.Dto;
 using MyTraining1101Demo.Customers.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Text;
 using System.Threading.Tasks;
-using System.Linq.Dynamic.Core;
-using Abp.Linq.Extensions;
-using Abp.UI;
 
 
 namespace MyTraining1101Demo.Customers
@@ -19,14 +22,18 @@ namespace MyTraining1101Demo.Customers
     {
         private readonly IRepository<Customer> _customerRepository;
         private readonly IRepository<CustomerUser> _customerUserRepository;
+        private readonly IRepository<User, long> _userRepository;
+
 
         public CustomerAppService(
             IRepository<Customer> CustomerRepository,
-            IRepository<CustomerUser> CustomerUserRepository
+            IRepository<CustomerUser> CustomerUserRepository,
+            IRepository<User, long> UserRepository
         )
         {
             _customerRepository = CustomerRepository;
             _customerUserRepository = CustomerUserRepository;
+            _userRepository = UserRepository;
         }
 
         public async Task CreateAsync(CreateOrEditCustomerDto input)
@@ -137,6 +144,24 @@ namespace MyTraining1101Demo.Customers
                 Logger.Error("Error deleting customer and assigned users", ex);
                 throw;
             }
+        }
+
+        public async Task<ListResultDto<UserListDto>> GetUsersByCustomerId(int customerId)
+        {
+            var userIds = await _customerUserRepository
+                .GetAll()
+                .Where(cu => cu.CustomerId == customerId)
+                .Select(cu => cu.UserId)
+                .ToListAsync();
+
+            var users = await _userRepository
+                .GetAll()
+                .Where(u => userIds.Contains(u.Id))
+                .ToListAsync();
+
+            return new ListResultDto<UserListDto>(
+                ObjectMapper.Map<List<UserListDto>>(users)
+            );
         }
 
 
