@@ -15,10 +15,20 @@ export class CustomersComponent extends AppComponentBase implements OnInit {
   loading: boolean = false; // Loading state
   searchText: string = ''; // Search input value
   selectedCustomer: CustomerDto | null = null; // Selected customer for dropdown
+  showCustomerModal: boolean = false; // Control customer modal visibility
   
   // Pagination variables
   currentPage: number = 1;
   pageSize: number = 10;
+  
+  userList = [
+  { id: 1, name: 'Abhijeet' },
+  { id: 2, name: 'Tejas' },
+  { id: 3, name: 'Amit' }
+];
+
+selectedUsers: number[] = [];
+
 
   constructor(
     injector: Injector,
@@ -132,6 +142,16 @@ export class CustomersComponent extends AppComponentBase implements OnInit {
     // TODO: Implement delete functionality
     this.notify.info('Delete functionality will be implemented later');
     this.selectedCustomer = null; // Close dropdown
+  }
+
+  // Method to open customer modal
+  openCustomerModal(): void {
+    this.showCustomerModal = true;
+  }
+
+  // Method to close customer modal
+  closeCustomerModal(): void {
+    this.showCustomerModal = false;
   }
 
   // Helper method to expose Math.min to template
