@@ -196,6 +196,33 @@ namespace MyTraining1101Demo.Customers
             return new ListResultDto<NameValueDto>(unassignedUsers);
         }
 
+        public async Task<GetCustomerUserDropdownDto> GetCustomerUserDropdown(int customerId)
+        {
+            // Get all user IDs assigned to this customer
+            var assignedUserIds = await _customerUserRepository
+                .GetAll()
+                .Where(cu => cu.CustomerId == customerId)
+                .Select(cu => cu.UserId)
+                .ToListAsync();
+
+            // Get assigned user details
+            var assignedUsers = await _userRepository
+                .GetAll()
+                .Where(u => assignedUserIds.Contains(u.Id))
+                .ToListAsync();
+
+            // Get unassigned user details
+            var unassignedUsers = await _userRepository
+                .GetAll()
+                .Where(u => !_customerUserRepository.GetAll().Select(cu => cu.UserId).Contains(u.Id))
+                .ToListAsync();
+
+            return new GetCustomerUserDropdownDto
+            {
+                AssignedUsers = ObjectMapper.Map<List<UserListDto>>(assignedUsers),
+                UnassignedUsers = ObjectMapper.Map<List<UserListDto>>(unassignedUsers)
+            };
+        }
 
 
     }

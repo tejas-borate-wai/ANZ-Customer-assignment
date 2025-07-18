@@ -11,27 +11,23 @@ import { forkJoin } from 'rxjs';
 })
 export class CustomersComponent extends AppComponentBase implements OnInit {
 
-  // Variables to store data
-  customers: CustomerDto[] = []; // Array to store all customers
-  totalCount: number = 0; // Total number of customers
-  loading: boolean = false; // Loading state
-  searchText: string = ''; // Search input value
-  selectedCustomer: CustomerDto | null = null; // Selected customer for dropdown
-  showCustomerModal: boolean = false; // Control customer modal visibility
-  showUsersModal: boolean = false; // Control view users modal visibility
+  customers: CustomerDto[] = []; 
+  totalCount: number = 0; 
+  loading: boolean = false; 
+  searchText: string = ''; 
+  selectedCustomer: CustomerDto | null = null; 
+  showCustomerModal: boolean = false; 
+  showUsersModal: boolean = false; 
   
-  // Pagination variables
   currentPage: number = 1;
-  pageSize: number = 10;
+  pageSize: number = 5;
   
-  userList = []; // Will be loaded from API
-  assignedUserDetails: any[] = []; // Store assigned user details for edit mode
-  customerUsers: any[] = []; // Store users for selected customer
-userSearchText: string = '';
+  userList = []; 
+  customerUsers: any[] = [];
+  userSearchText: string = '';
 
-// Customer form data
 customerForm = {
-  id: null, // Add ID for edit mode
+  id: null, 
   name: '',
   emailId: '',
   address: '',
@@ -40,7 +36,7 @@ customerForm = {
   
 };
 
-isEditMode: boolean = false; // Track if we're editing
+isEditMode: boolean = false; 
 
 
   constructor(
@@ -52,52 +48,43 @@ isEditMode: boolean = false; // Track if we're editing
   }
 
   ngOnInit(): void {
-    this.loadCustomers(); // Load customers when component starts
+    this.loadCustomers(); 
   }
 
-  // Method to load customers from API
   loadCustomers(): void {
-    this.loading = true; // Show loading
+    this.loading = true; 
     
-    // Calculate skip count for pagination
     const skipCount = (this.currentPage - 1) * this.pageSize;
     
-    // Call the API with parameters
     this._customerService.getAll(
-      this.searchText || undefined, // filter
-      undefined, // sorting
-      skipCount, // skipCount
-      this.pageSize // maxResultCount
-    ).subscribe({
-      next: (result: PagedResultDtoOfCustomerDto) => {
-        this.customers = result.items || []; // Store customers
-        this.totalCount = result.totalCount || 0; // Store total count
-        this.loading = false; // Hide loading
-      },
-      error: (error) => {
-        this.loading = false; // Hide loading on error
-        this.notify.error('Failed to load customers');
-      }
+      this.searchText || undefined, 
+      undefined, 
+      skipCount, 
+      this.pageSize 
+    ).subscribe((result: PagedResultDtoOfCustomerDto) => {
+      this.customers = result.items || [];
+      this.totalCount = result.totalCount || 0;
+      this.loading = false;
     });
   }
 
-  // Method to search customers
+  // search customers
   searchCustomers(): void {
-    this.currentPage = 1; // Reset to first page
-    this.loadCustomers(); // Load customers with search
+    this.currentPage = 1; 
+    this.loadCustomers(); 
   }
 
-  // Method to refresh/reload customers
+  //refresh customers
   refreshCustomers(): void {
-    this.searchText = ''; // Clear search
-    this.currentPage = 1; // Reset to first page
+    this.searchText = '';
+    this.currentPage = 1;
     this.loadCustomers();
   }
 
-  // Method to change page size
+  // change page size
   onPageSizeChange(event: any): void {
     this.pageSize = parseInt(event.target.value);
-    this.currentPage = 1; // Reset to first page
+    this.currentPage = 1;
     this.loadCustomers();
   }
 
@@ -128,9 +115,9 @@ isEditMode: boolean = false; // Track if we're editing
   // Method to toggle dropdown
   toggleDropdown(customer: CustomerDto): void {
     if (this.selectedCustomer?.id === customer.id) {
-      this.selectedCustomer = null; // Close if same customer
+      this.selectedCustomer = null; 
     } else {
-      this.selectedCustomer = customer; // Open for selected customer
+      this.selectedCustomer = customer;
     }
   }
 
@@ -149,66 +136,29 @@ loadCustomerUsers(): void {
     }
   });
 }
-  // Method to close view users modal
   closeUsersModal(): void {
     this.showUsersModal = false;
   }
 
-  // Method to edit customer
   editCustomer(customer: CustomerDto): void {
-    this.selectedCustomer = null; // Close dropdown
+    this.selectedCustomer = null;
     
-    // Try to load customer data for editing
-    try {
-      this._customerService.getCustomerForEdit(customer.id).subscribe({
-        next: (result) => {
-          this.isEditMode = true;
-          this.customerForm = {
-            id: result.id,
-            name: result.name || '',
-            emailId: result.emailId || '',
-            address: result.address || '',
-            registrationDate: result.registrationDate ? result.registrationDate.toString().split('T')[0] : '',
-            userIds: result.assignedUserIds || []
-          };
-          
-          this.loadAllUsers(); // Load all users for edit mode
-          this.showCustomerModal = true; // Open modal
-        },
-        error: (error) => {
-          this.notify.error('Failed to load customer data');
-          
-          // Fallback: Open modal with basic data
-          this.isEditMode = true;
-          this.customerForm = {
-            id: customer.id,
-            name: customer.name || '',
-            emailId: customer.emailId || '',
-            address: customer.address || '',
-            registrationDate: customer.registrationDate ? customer.registrationDate.toString().split('T')[0] : '',
-            userIds: []
-          };
-          this.loadAllUsers();
-          this.showCustomerModal = true;
-        }
-      });
-    } catch (error) {
-      // Simple fallback if method doesn't exist
+    this._customerService.getCustomerForEdit(customer.id).subscribe((result) => {
       this.isEditMode = true;
       this.customerForm = {
-        id: customer.id,
-        name: customer.name || '',
-        emailId: customer.emailId || '',
-        address: customer.address || '',
-        registrationDate: customer.registrationDate ? customer.registrationDate.toString().split('T')[0] : '',
-        userIds: []
+        id: result.id,
+        name: result.name || '',
+        emailId: result.emailId || '',
+        address: result.address || '',
+        registrationDate: result.registrationDate ? result.registrationDate.toString().split('T')[0] : '',
+        userIds: result.assignedUserIds || []
       };
-      this.loadAllUsers();
-      this.showCustomerModal = true;
-    }
+      this.loadCustomerUserDropdown(result.id); 
+      this.showCustomerModal = true; 
+    });
   }
 
-  // Method to delete customer
+  //delete customer
   deleteCustomer(customer: CustomerDto): void {
     this.selectedCustomer = null; // Close dropdown
     // Use SweetAlert2 for confirmation
@@ -224,105 +174,50 @@ loadCustomerUsers(): void {
     }).then((result: any) => {
       if (result.isConfirmed) {
         this.loading = true;
-        this._customerService.delete(customer.id).subscribe({
-          next: () => {
-            this.loading = false;
-            this.notify.success('Customer deleted successfully!');
-            this.loadCustomers(); // Reload the table
-          },
-          error: (error) => {
-            this.loading = false;
-            this.notify.error('Failed to delete customer');
-          }
+        this._customerService.delete(customer.id).subscribe(() => {
+          this.loading = false;
+          this.notify.success('Customer deleted successfully!');
+          this.loadCustomers(); 
         });
       }
     });
   }
 
-  // Method to open customer modal
   openCustomerModal(): void {
     this.showCustomerModal = true;
-    this.loadUnassignedUsers(); // Load users when modal opens
+    this.loadUnassignedUsers(); 
   }
 
   // Method to load unassigned users
   loadUnassignedUsers(): void {
-    this._customerService.getUnassignedUsers().subscribe({
-      next: (result) => {
-        this.userList = result.items.map(item => ({
-          id: item.value,
-          name: item.name
-        }));
-      },
-      error: (error) => {
-        this.notify.error('Failed to load users');
-      }
+    this._customerService.getUnassignedUsers().subscribe((result) => {
+      this.userList = result.items.map(item => ({
+        id: item.value,
+        name: item.name
+      }));
     });
   }
 
-  // Method to load all users (for edit mode)
-  loadAllUsers(): void {
-    // For edit mode, we need to load all users so assigned users show in dropdown
-    this._customerService.getUnassignedUsers().subscribe({
-      next: (result) => {
-        // Start with unassigned users
-        this.userList = result.items.map(item => ({
-          id: item.value,
-          name: item.name
-        }));
-        
-        // If we have assigned userIds, fetch their actual names
-        if (this.customerForm.userIds && this.customerForm.userIds.length > 0) {
-          // Create array of API calls to get user details
-          const userDetailCalls = this.customerForm.userIds.map(userId => {
-            const existsInList = this.userList.find(user => user.id === userId);
-            if (!existsInList) {
-              return this._userService.getUserForEdit(userId);
-            }
-            return null;
-          }).filter(call => call !== null);
+  // Method to load all users dropdown (for edit mode)
+  loadCustomerUserDropdown(customerId: number): void {
+  this._customerService.getCustomerUserDropdown(customerId).subscribe(result => {
+    const allUsers = [...result.assignedUsers, ...result.unassignedUsers];
 
-          // If we have calls to make, execute them
-          if (userDetailCalls.length > 0) {
-            forkJoin(userDetailCalls).subscribe({
-              next: (userDetails) => {
-                // Add the actual user details to the list
-                userDetails.forEach(userDetail => {
-                  if (userDetail && userDetail.user) {
-                    this.userList.push({
-                      id: userDetail.user.id,
-                      name: userDetail.user.name || userDetail.user.userName || `User ${userDetail.user.id}`
-                    });
-                  }
-                });
-              },
-              error: (error) => {
-                // Fallback: add users with ID-based names
-                this.customerForm.userIds.forEach(userId => {
-                  const existsInList = this.userList.find(user => user.id === userId);
-                  if (!existsInList) {
-                    this.userList.push({
-                      id: userId,
-                      name: `User ${userId}`
-                    });
-                  }
-                });
-              }
-            });
-          }
-        }
-      },
-      error: (error) => {
-        this.notify.error('Failed to load users');
-      }
-    });
-  }
+    this.userList = allUsers.map(u => ({
+      id: u.id,
+      name: u.name
+    }));
+
+    // Pre-select assigned users
+    this.customerForm.userIds = result.assignedUsers.map(u => u.id);
+  });
+}
+
 
   // Method to close customer modal
   closeCustomerModal(): void {
     this.showCustomerModal = false;
     this.isEditMode = false;
-    // Reset form when closing
     this.customerForm = {
       id: null,
       name: '',
@@ -333,9 +228,8 @@ loadCustomerUsers(): void {
     };
   }
 
-  // Method to save customer
+  //save customer
   saveCustomer(): void {
-    // Simple validation
     if (!this.customerForm.name || !this.customerForm.emailId) {
       this.notify.warn('Please fill required fields');
       return;
@@ -352,34 +246,19 @@ loadCustomerUsers(): void {
     input.registrationDate = this.customerForm.registrationDate ? new Date(this.customerForm.registrationDate) as any : undefined;
     input.assignedUserIds = this.customerForm.userIds;
 
-    // Call create or update based on mode
     if (this.isEditMode) {
-      // Update existing customer
-      this._customerService.update(input).subscribe({
-        next: (result) => {
-          this.loading = false;
-          this.notify.success('Customer updated successfully!');
-          this.closeCustomerModal();
-          this.loadCustomers(); // Reload the table
-        },
-        error: (error) => {
-          this.loading = false;
-          this.notify.error('Failed to update customer');
-        }
+      this._customerService.update(input).subscribe((result) => {
+        this.loading = false;
+        this.notify.success('Customer updated successfully!');
+        this.closeCustomerModal();
+        this.loadCustomers(); 
       });
     } else {
-      // Create new customer
-      this._customerService.create(input).subscribe({
-        next: (result) => {
-          this.loading = false;
-          this.notify.success('Customer created successfully!');
-          this.closeCustomerModal();
-          this.loadCustomers(); // Reload the table
-        },
-        error: (error) => {
-          this.loading = false;
-          this.notify.error('Failed to create customer');
-        }
+      this._customerService.create(input).subscribe((result) => {
+        this.loading = false;
+        this.notify.success('Customer created successfully!');
+        this.closeCustomerModal();
+        this.loadCustomers();
       });
     }
   }

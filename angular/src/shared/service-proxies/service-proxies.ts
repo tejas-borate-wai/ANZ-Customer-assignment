@@ -2209,6 +2209,62 @@ export class CustomerServiceProxy {
         }
         return _observableOf<ListResultDtoOfNameValueDto>(<any>null);
     }
+
+    /**
+     * @param customerId (optional) 
+     * @return Success
+     */
+    getCustomerUserDropdown(customerId: number | undefined): Observable<GetCustomerUserDropdownDto> {
+        let url_ = this.baseUrl + "/api/services/app/Customer/GetCustomerUserDropdown?";
+        if (customerId === null)
+            throw new Error("The parameter 'customerId' cannot be null.");
+        else if (customerId !== undefined)
+            url_ += "customerId=" + encodeURIComponent("" + customerId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "text/plain"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetCustomerUserDropdown(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetCustomerUserDropdown(<any>response_);
+                } catch (e) {
+                    return <Observable<GetCustomerUserDropdownDto>><any>_observableThrow(e);
+                }
+            } else
+                return <Observable<GetCustomerUserDropdownDto>><any>_observableThrow(response_);
+        }));
+    }
+
+    protected processGetCustomerUserDropdown(response: HttpResponseBase): Observable<GetCustomerUserDropdownDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (<any>response).error instanceof Blob ? (<any>response).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = GetCustomerUserDropdownDto.fromJS(resultData200);
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf<GetCustomerUserDropdownDto>(<any>null);
+    }
 }
 
 @Injectable()
@@ -19308,6 +19364,62 @@ export interface IGetCurrentLoginInformationsOutput {
     impersonatorTenant: TenantLoginInfoDto;
     application: ApplicationInfoDto;
     theme: UiCustomizationSettingsDto;
+}
+
+export class GetCustomerUserDropdownDto implements IGetCustomerUserDropdownDto {
+    assignedUsers!: UserListDto[] | undefined;
+    unassignedUsers!: UserListDto[] | undefined;
+
+    constructor(data?: IGetCustomerUserDropdownDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["assignedUsers"])) {
+                this.assignedUsers = [] as any;
+                for (let item of _data["assignedUsers"])
+                    this.assignedUsers!.push(UserListDto.fromJS(item));
+            }
+            if (Array.isArray(_data["unassignedUsers"])) {
+                this.unassignedUsers = [] as any;
+                for (let item of _data["unassignedUsers"])
+                    this.unassignedUsers!.push(UserListDto.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): GetCustomerUserDropdownDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetCustomerUserDropdownDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.assignedUsers)) {
+            data["assignedUsers"] = [];
+            for (let item of this.assignedUsers)
+                data["assignedUsers"].push(item.toJSON());
+        }
+        if (Array.isArray(this.unassignedUsers)) {
+            data["unassignedUsers"] = [];
+            for (let item of this.unassignedUsers)
+                data["unassignedUsers"].push(item.toJSON());
+        }
+        return data; 
+    }
+}
+
+export interface IGetCustomerUserDropdownDto {
+    assignedUsers: UserListDto[] | undefined;
+    unassignedUsers: UserListDto[] | undefined;
 }
 
 export class GetDailySalesOutput implements IGetDailySalesOutput {
