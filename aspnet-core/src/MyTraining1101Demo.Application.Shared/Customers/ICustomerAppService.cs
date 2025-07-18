@@ -16,6 +16,6 @@ namespace MyTraining1101Demo.Customers
         Task<PagedResultDto<CustomerDto>> GetAllAsync(GetAllCustomersInput input);
         Task<CreateOrEditCustomerDto> GetCustomerForEditAsync(EntityDto input);
         Task DeleteAsync(EntityDto<int> input);
-        Task<ListResultDto<UserListDto>> GetUsersByCustomerId(int customerId);
+        Task<ListResultDto<UserListDto>> GetUsersByCustomerId(int customerId, string filter = null);
     }
 }

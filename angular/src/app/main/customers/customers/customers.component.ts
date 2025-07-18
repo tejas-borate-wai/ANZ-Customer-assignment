@@ -17,15 +17,16 @@ export class CustomersComponent extends AppComponentBase implements OnInit {
   searchText: string = ''; // Search input value
   selectedCustomer: CustomerDto | null = null; // Selected customer for dropdown
   showCustomerModal: boolean = false; // Control customer modal visibility
+  showUsersModal: boolean = false; // Control view users modal visibility
   
   // Pagination variables
   currentPage: number = 1;
-  pageSize: number = 3;
+  pageSize: number = 10;
   
   userList = []; // Will be loaded from API
   assignedUserDetails: any[] = []; // Store assigned user details for edit mode
-
-selectedUsers: number[] = [];
+  customerUsers: any[] = []; // Store users for selected customer
+userSearchText: string = '';
 
 // Customer form data
 customerForm = {
@@ -34,7 +35,8 @@ customerForm = {
   emailId: '',
   address: '',
   registrationDate: '',
-  userIds: [] as number[]
+  userIds: [] as number[],
+  
 };
 
 isEditMode: boolean = false; // Track if we're editing
@@ -132,10 +134,23 @@ isEditMode: boolean = false; // Track if we're editing
   }
 
   // Method to view users for customer
-  viewUsers(customer: CustomerDto): void {
-    // TODO: Implement view users functionality
-    this.notify.info('View users functionality will be implemented later');
-    this.selectedCustomer = null; // Close dropdown
+viewUsers(customer: CustomerDto): void {
+  this.selectedCustomer = customer;
+  this.userSearchText = '';
+  this.loadCustomerUsers();
+  this.showUsersModal = true;
+}
+
+loadCustomerUsers(): void {
+  this._customerService.getUsersByCustomerId(this.selectedCustomer.id, this.userSearchText).subscribe({
+    next: (result) => {
+      this.customerUsers = result.items || [];
+    }
+  });
+}
+  // Method to close view users modal
+  closeUsersModal(): void {
+    this.showUsersModal = false;
   }
 
   // Method to edit customer

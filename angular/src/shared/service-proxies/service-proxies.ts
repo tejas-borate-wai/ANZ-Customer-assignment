@@ -2100,14 +2100,19 @@ export class CustomerServiceProxy {
 
     /**
      * @param customerId (optional) 
+     * @param filter (optional) 
      * @return Success
      */
-    getUsersByCustomerId(customerId: number | undefined): Observable<ListResultDtoOfUserListDto> {
+    getUsersByCustomerId(customerId: number | undefined, filter: string | undefined): Observable<ListResultDtoOfUserListDto> {
         let url_ = this.baseUrl + "/api/services/app/Customer/GetUsersByCustomerId?";
         if (customerId === null)
             throw new Error("The parameter 'customerId' cannot be null.");
         else if (customerId !== undefined)
             url_ += "customerId=" + encodeURIComponent("" + customerId) + "&";
+        if (filter === null)
+            throw new Error("The parameter 'filter' cannot be null.");
+        else if (filter !== undefined)
+            url_ += "filter=" + encodeURIComponent("" + filter) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_ : any = {

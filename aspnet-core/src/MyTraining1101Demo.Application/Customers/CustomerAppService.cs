@@ -146,7 +146,7 @@ namespace MyTraining1101Demo.Customers
             }
         }
 
-        public async Task<ListResultDto<UserListDto>> GetUsersByCustomerId(int customerId)
+        public async Task<ListResultDto<UserListDto>> GetUsersByCustomerId(int customerId, string filter = null)
         {
             var userIds = await _customerUserRepository
                 .GetAll()
@@ -154,15 +154,28 @@ namespace MyTraining1101Demo.Customers
                 .Select(cu => cu.UserId)
                 .ToListAsync();
 
-            var users = await _userRepository
+            var query = _userRepository
                 .GetAll()
-                .Where(u => userIds.Contains(u.Id))
-                .ToListAsync();
+                .Where(u => userIds.Contains(u.Id));
+
+            if (!string.IsNullOrWhiteSpace(filter))
+            {
+                var lowerFilter = filter.ToLower();
+
+                query = query.Where(u =>
+                    (u.Name != null && u.Name.ToLower().Contains(lowerFilter)) ||
+                    (u.Surname != null && u.Surname.ToLower().Contains(lowerFilter)) ||
+                    (u.EmailAddress != null && u.EmailAddress.ToLower().Contains(lowerFilter)));
+            }
+
+            var users = await query.ToListAsync();
 
             return new ListResultDto<UserListDto>(
                 ObjectMapper.Map<List<UserListDto>>(users)
             );
         }
+
+
 
         public async Task<ListResultDto<NameValueDto>> GetUnassignedUsersAsync()
         {
