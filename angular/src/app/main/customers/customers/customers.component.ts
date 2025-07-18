@@ -1,4 +1,5 @@
 import { Component, OnInit, Injector } from '@angular/core';
+import Swal from 'sweetalert2';
 import { AppComponentBase } from '@shared/common/app-component-base';
 import { CustomerServiceProxy, CustomerDto, PagedResultDtoOfCustomerDto, CreateOrEditCustomerDto, UserServiceProxy } from '@shared/service-proxies/service-proxies';
 import { forkJoin } from 'rxjs';
@@ -210,21 +211,32 @@ loadCustomerUsers(): void {
   // Method to delete customer
   deleteCustomer(customer: CustomerDto): void {
     this.selectedCustomer = null; // Close dropdown
-    
-    if (confirm(`Are you sure you want to delete customer "${customer.name}"?`)) {
-      this.loading = true;
-      this._customerService.delete(customer.id).subscribe({
-        next: () => {
-          this.loading = false;
-          this.notify.success('Customer deleted successfully!');
-          this.loadCustomers(); // Reload the table
-        },
-        error: (error) => {
-          this.loading = false;
-          this.notify.error('Failed to delete customer');
-        }
-      });
-    }
+    // Use SweetAlert2 for confirmation
+    Swal.fire({
+      title: 'Are you sure?',
+      text: `Are you sure you want to delete customer "${customer.name}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel'
+    }).then((result: any) => {
+      if (result.isConfirmed) {
+        this.loading = true;
+        this._customerService.delete(customer.id).subscribe({
+          next: () => {
+            this.loading = false;
+            this.notify.success('Customer deleted successfully!');
+            this.loadCustomers(); // Reload the table
+          },
+          error: (error) => {
+            this.loading = false;
+            this.notify.error('Failed to delete customer');
+          }
+        });
+      }
+    });
   }
 
   // Method to open customer modal
